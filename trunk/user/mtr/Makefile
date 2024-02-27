@@ -1,33 +1,21 @@
-#https://github.com/traviscross/mtr
-SRC_NAME = mtr-0.92
-THISDIR = $(shell pwd)
+include $(ROOTDIR)/rules.mk
 
-all: config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=mtr
+PKG_VERSION:=0.95
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/traviscross/mtr/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=12490fb660ba5fb34df8c06a0f62b4f9cbd11a584fc3f6eceda0a99124e8596f
 
-configure:
-	( cd $(SRC_NAME) ; \
-	autoreconf -fi ; \
-	./configure \
-		--prefix=/usr \
-		--without-gtk \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+PKG_FIXUP:=autoreconf
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
+include $(INCLUDE_DIR)/package.mk
+
+CONFIGURE_ARGS += --without-gtk
+
+$(eval $(call BuildPackage,mtr))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/mtr /usr/bin/mtr
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/mtr-packet /usr/bin/mtr-packet
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mtr $(ROMFSDIR)/usr/bin/mtr
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mtr-packet $(ROMFSDIR)/usr/bin/mtr-packet
